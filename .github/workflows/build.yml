@@ -1,0 +1,37 @@
+name: Build mod
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Unzip source
+        run: unzip -q -o ./*.zip
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.12.1
+
+      - name: Build jar
+        working-directory: fpsboost
+        run: gradle build --no-daemon
+
+      - name: Publish jar to Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: FPS Boost build ${{ github.run_number }}
+          files: fpsboost/build/libs/fpsboost-1.0.0.jar
